@@ -26,15 +26,19 @@ const userSchema = new mongoose.Schema(
 
 const User = mongoose.model('User', userSchema);
 
-// const newUser = new User({name: "Jhon",
-//   email: "John@gmail.com",
-//   password: "thatspassword"
-// })
-
-// newUser.save()
-
 app.get('/', function (req, res) {
   res.send('Hello World')
+})
+
+app.get('/user/:username', async (req, res) => {
+  const username = req.params.username
+  const user = await User.findOne({name: username})
+  console.log(user)
+  if(user!=null){
+  res.send(user)}
+  else{
+    res.status(404).send("User not found!")
+  }
 })
 
 app.post('/add-user', (req, res) => {
@@ -56,17 +60,8 @@ app.get('/login', (req, res) => {
 })
 
 app.get('/hello', (req, res) => {
-    
   res.send('Hey!')
 })
-
-
-app.get('/add/:userId',(req,res) =>{
-  const data = req.params;
-  console.log(data);
-  res.send("user searched successfully")
-})
-
 
 app.post('/add', (req, res) => {
   try{
