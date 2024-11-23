@@ -41,9 +41,28 @@ app.get('/user/:username', async (req, res) => {
   }
 })
 
-app.post('/add-user', (req, res) => {
+app.get('/login/auth', async (req, res) => {
+  const username = req.body.name
+  console.log(username)
+  
+  const password = req.body.password
+  console.log(password)
+  const usernameCheck = await User.findOne({name: username})
+  console.log(usernameCheck)
+  if(username == usernameCheck.name && password == usernameCheck.password){
+    res.send("Login successful!")
+  }
+  else{
+    res.send("User not found")
+  }
+})
+
+app.post('/add-user', async (req, res) => {
 
   const data = req.body;
+
+  const newUserCheck = await User.findOne({name: req.body.name})
+  console.log(newUserCheck)
 
   const newProfile = new User({
     name: data.name,
@@ -51,8 +70,13 @@ app.post('/add-user', (req, res) => {
     password: data.password
   })
 
+  if(newUserCheck==null){
   newProfile.save()
   res.send("user added!")
+  }
+  else{
+    res.send("Username already in use! please use a new username")
+  }
 })
 
 app.get('/login', (req, res) => {
