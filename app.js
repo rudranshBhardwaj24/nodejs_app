@@ -26,20 +26,43 @@ const userSchema = new mongoose.Schema(
 
 const User = mongoose.model('User', userSchema);
 
-// const newUser = new User({name: "Jhon",
-//   email: "John@gmail.com",
-//   password: "thatspassword"
-// })
-
-// newUser.save()
-
 app.get('/', function (req, res) {
   res.send('Hello World')
 })
 
-app.post('/add-user', (req, res) => {
+app.get('/user/:username', async (req, res) => {
+  const username = req.params.username
+  const user = await User.findOne({name: username})
+  console.log(user)
+  if(user!=null){
+  res.send(user)}
+  else{
+    res.status(404).send("User not found!")
+  }
+})
+
+app.get('/login/auth', async (req, res) => {
+  const username = req.body.name
+  console.log(username)
+  
+  const password = req.body.password
+  console.log(password)
+  const usernameCheck = await User.findOne({name: username})
+  console.log(usernameCheck)
+  if(username == usernameCheck.name && password == usernameCheck.password){
+    res.send("Login successful!")
+  }
+  else{
+    res.send("User not found")
+  }
+})
+
+app.post('/add-user', async (req, res) => {
 
   const data = req.body;
+
+  const newUserCheck = await User.findOne({name: req.body.name})
+  console.log(newUserCheck)
 
   const newProfile = new User({
     name: data.name,
@@ -47,8 +70,13 @@ app.post('/add-user', (req, res) => {
     password: data.password
   })
 
+  if(newUserCheck==null){
   newProfile.save()
   res.send("user added!")
+  }
+  else{
+    res.send("Username already in use! please use a new username")
+  }
 })
 
 app.get('/login', (req, res) => {
@@ -56,17 +84,8 @@ app.get('/login', (req, res) => {
 })
 
 app.get('/hello', (req, res) => {
-    
   res.send('Hey!')
 })
-
-
-app.get('/add/:userId',(req,res) =>{
-  const data = req.params;
-  console.log(data);
-  res.send("user searched successfully")
-})
-
 
 app.post('/add', (req, res) => {
   try{
