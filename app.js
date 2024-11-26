@@ -5,6 +5,7 @@ const connectDB = require('./src/config/database')
 const User = require('./src/models/user')
 
 const cors = require('cors');
+const user = require('./src/models/user')
 app.use(cors());
 
 const portNumber = 8000
@@ -23,6 +24,14 @@ app.post('/add-user', async (req, res) => {
   }
 })
 
+app.get('/get-user', async (req, res) => {
+  try{
+  const userData = await User.find();
+  res.send(userData)}
+  catch(err){
+    res.send("Unable to get data :(", err)
+  }
+})
 
 app.get('/', function (req, res) {
   res.send('Hello World')
