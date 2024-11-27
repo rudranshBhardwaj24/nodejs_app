@@ -10,7 +10,7 @@ app.use(cors());
 
 const portNumber = 8000
 
-app.use(bodyParser.json())
+app.use(express.json())
 
 //Add user
 app.post('/add-user', async (req, res) => {
@@ -20,16 +20,44 @@ app.post('/add-user', async (req, res) => {
   await newUser.save();
   res.send("User added successfully!")}
   catch(err){
-    res.status(401).send("Could not save the user! " + err)
+    res.status(400).json({message: "Unable to add user!", err: err.message})
   }
 })
 
-app.get('/get-user', async (req, res) => {
+app.get('/user', async (req, res) => {
   try{
   const userData = await User.find();
   res.send(userData)}
   catch(err){
     res.send("Unable to get data :(", err)
+  }
+})
+
+app.patch('/user', async (req, res) => {
+  const userId = req.body.userId;
+  try{
+    const userProfile = await User.findByIdAndUpdate(userId, {
+      firstName: req.body.name 
+    })
+    res.send('User updated!')
+  }
+  catch(err){
+    res.send('could not find the user!')
+  }
+})
+
+app.delete('/user', async (req, res) => {
+  const userId = req.body.userId
+  try{
+    const userProfile = await User.findByIdAndDelete({_id: userId})
+    console.log(userProfile)
+    res.send("User deleted successfully!")
+  }
+  catch(err){
+    res.status(400).json({
+      message: "Unable to delete user",
+      errorMessage: err.message
+    })
   }
 })
 
