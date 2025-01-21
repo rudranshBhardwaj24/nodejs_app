@@ -3,27 +3,29 @@ const app = express()
 const bodyParser = require('body-parser')
 const connectDB = require('./src/config/database')
 const User = require('./src/models/user')
-
-const cors = require('cors');
+const bcrypt = require('bcrypt')
+const cookieParser = require('cookie-parser')
+const cors = require('cors')
 const user = require('./src/models/user')
+const jwt = require('jsonwebtoken')
+
+
+const { default: mongoose, Mongoose } = require('mongoose')
+const { validateSingUpData } = require('./src/utils/validation')
+
+
 app.use(cors());
+app.use(cookieParser())
+app.use(express.json())
+
+app.route("/games", () => {})
 
 const portNumber = 8000
 
-app.use(express.json())
+//Add user - sign up
 
-//Add user
-app.post('/add-user', async (req, res) => {
-  const newUser = new User(req.body)
 
-  try{
-  await newUser.save();
-  res.send("User added successfully!")}
-  catch(err){
-    res.status(400).json({message: "Unable to add user!", err: err.message})
-  }
-})
-
+//get user
 app.get('/user', async (req, res) => {
   try{
   const userData = await User.find();
@@ -33,6 +35,7 @@ app.get('/user', async (req, res) => {
   }
 })
 
+//update user
 app.patch('/user', async (req, res) => {
   const userId = req.body.userId;
   try{
@@ -46,6 +49,7 @@ app.patch('/user', async (req, res) => {
   }
 })
 
+//delete user
 app.delete('/user', async (req, res) => {
   const userId = req.body.userId
   try{
@@ -61,8 +65,71 @@ app.delete('/user', async (req, res) => {
   }
 })
 
+app.get('/user-id', async(req, res) => {
+  const {email, password, id} = req.body;
+  const user = await User.findById({_id: id})
+  res.send(user)
+})
+
+//login user
+app.post('/login', async (req, res) => {
+  const{email, password} = req.body;
+  const user = await User.findOne({email: email})
+  console.log(user)
+  const isPasswordCorrect = await bcrypt.compare(password, user.password)
+  if(isPasswordCorrect){
+  const token = await jwt.sign({_id: user._id},"Rudra")
+  console.log(user._id)
+
+  if(user){
+    res.cookie("token", token);
+    res.send("Login successful!");
+  }}
+  else{
+    res.send("Invalid Password")
+  }
+})
+
+
+app.post('/signup', async (req, res) => {
+  try{
+  //validation of data
+  validateSingUpData(req)
+
+  //hash value
+  const {firstName, lastName, email, password} = req.body;
+  const hashedPassword = await bcrypt.hash(password, 10)
+
+  const user = new User({firstName, lastName, email, password:hashedPassword})
+  
+  console.log("unhashed password: " + password + "\n" + "hashed password: " + hashedPassword)
+  await user.save();
+  res.send("User added successfully!")}
+  catch(err){
+    res.status(400).json({message: "Unable to add user!", err: err.message})
+  }
+})
+
+
 app.get('/', function (req, res) {
   res.send('Hello World')
+})
+
+//verify token and show profile
+app.get("/profile", async (req, res) =>{
+  const token = req.cookies.token;
+  console.log(token)
+  const userId = await jwt.verify(token, "Rudra");
+   
+  const { _id } =  userId;
+  console.log("this is userId:" + _id)
+  const user =  await User.findById({_id: _id});
+  if(!user){
+    res.send("Please log in to get profile")
+  }
+  else{
+  console.log(token)
+  res.send(user)}
 })
 
 connectDB().then(()=>{
