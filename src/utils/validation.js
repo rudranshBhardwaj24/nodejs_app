@@ -13,6 +13,14 @@ const validateSingUpData = (req) => {
     }
 }
 
+const validateProfileEdit = (req) => {
+
+      const allowedEditFileds = ['firstName', 'lastName'];
+      const isEditAllowed = Object.keys(req.body).every((filed) => allowedEditFileds.includes(filed));
+      return isEditAllowed;
+}
+
+
 module.exports = {
-    validateSingUpData
+    validateSingUpData, validateProfileEdit
 }
