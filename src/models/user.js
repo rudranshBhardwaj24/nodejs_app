@@ -1,24 +1,47 @@
-const mongoose = require("mongoose")
+const mongoose = require("mongoose");
+const jwt = require("jsonwebtoken");
 
-const userSchema = new mongoose.Schema({
+const userSchema = new mongoose.Schema(
+  {
     firstName: {
-        type: String
+      type: String,
+      required: true,
     },
     lastName: {
-        type: String
+      type: String,
+      minLength: 2,
+      max: 20,
     },
     email: {
-        type: String
+      type: String,
+      required: true,
+      unique: true,
+      smallcase: true,
     },
     password: {
-        type: String
+      required: true,
+      type: String,
     },
     age: {
-        type: Number
+      type: Number,
+      max: 99,
     },
     gender: {
-        type: String
-    }
-})
+      type: String,
+    },
+    id: {
+      type: String,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
 
-module.exports = mongoose.model('User', userSchema)
+userSchema.methods.getJWT = async function () {
+  const user = this;
+  const token = await jwt.sign({ _id: user._id }, "Rudra");
+  return token;
+};
+
+module.exports = mongoose.model("User", userSchema);
